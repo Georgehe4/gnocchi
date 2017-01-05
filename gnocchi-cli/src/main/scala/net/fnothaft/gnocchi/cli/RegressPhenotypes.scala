@@ -75,6 +75,9 @@ class RegressPhenotypesArgs extends Args4jBase {
   @Args4jOption(required = false, name = "-saveAsText", usage = "Chooses to save as text. If not selected, saves to Parquet.")
   var saveAsText = false
 
+  @Args4jOption(required = false, name = "-saveAsFeatures", usage = "Chooses to save as text. If not selected, saves to Parquet.")
+  var saveAsFeatures = false
+
   @Args4jOption(required = false, name = "-validationStringency", usage = "The level of validation to use on inputs. By default, strict. Choices are STRICT, LENIENT, SILENT.")
   var validationStringency: String = "STRICT"
 
@@ -319,7 +322,17 @@ class RegressPhenotypes(protected val args: RegressPhenotypesArgs) extends BDGSp
         .format(r._2.variant.getContig.getContigName,
           r._2.variant.getStart, Math.pow(10, r._2.logPValue).toString))
         .saveAsTextFile(args.associations)
-    } else {
+    }
+    /*else if (args.saveAsFeatures) {
+      associations.rdd.keyBy(_.logPValue).sortBy(_._1).map(r => "%s, %s, %s, %s"
+        .format(r._2.variant.getContig.getContigName,
+          r._2.variant.getStart, r._2.variant.getEnd, Math.pow(10, r._2.logPValue).toString))
+        .saveAsTextFile(args.associations)
+    }*/
+    else if (args.saveAsFeatures) {
+      associations.rdd.saveAsObjectFile(args.associations)
+    }
+    else {
       associations.toDF.write.parquet(args.associations)
     }
   }
